@@ -2817,6 +2817,38 @@ msgid "settings.customProvider.incompleteTitle"
 msgstr "Name and Base URL are required"
 
 #. js-lingui-explicit-id
+msgid "settings.customProvider.incompleteAzureTitle"
+msgstr "Name and Azure Endpoint are required"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.kind"
+msgstr "Provider type"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.kindOpenAI"
+msgstr "OpenAI-compatible"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.kindAzure"
+msgstr "Azure OpenAI"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.titleAzure"
+msgstr "Azure OpenAI provider"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.azureEndpoint"
+msgstr "Azure Endpoint"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.apiVersion"
+msgstr "API Version"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.azureDeploymentPlaceholder"
+msgstr "deployment-name"
+
+#. js-lingui-explicit-id
 msgid "settings.test.button"
 msgstr "Test connection"
 

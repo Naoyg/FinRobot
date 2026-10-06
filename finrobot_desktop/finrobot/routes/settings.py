@@ -267,6 +267,11 @@ def _normalize_custom_providers(providers: list[ProviderConfig]) -> list[Provide
                 status_code=400,
                 detail=f"Provider '{pid}' (openai-compatible) requires a base_url.",
             )
+        if provider.kind == "azure-openai" and not (provider.base_url or "").strip():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Provider '{pid}' (azure-openai) requires a base_url (Azure endpoint).",
+            )
         normalized.append(provider.model_copy(update={"id": pid, "label": label}))
     return normalized
 

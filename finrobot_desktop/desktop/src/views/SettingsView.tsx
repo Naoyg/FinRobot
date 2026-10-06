@@ -91,7 +91,9 @@ export default function SettingsView() {
   const [addingCustom, setAddingCustom] = useState(false)
   const [draftProvider, setDraftProvider] = useState<DraftProvider>({
     name: '',
+    kind: 'openai-compatible',
     baseUrl: '',
+    apiVersion: '',
     modelId: '',
     apiKey: '',
   })

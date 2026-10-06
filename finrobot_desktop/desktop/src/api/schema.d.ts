@@ -3105,9 +3105,11 @@ export interface components {
        * Kind
        * @enum {string}
        */
-      kind: 'openai-compatible' | 'anthropic' | 'test'
+      kind: 'openai-compatible' | 'anthropic' | 'azure-openai' | 'test'
       /** Base Url */
       base_url?: string | null
+      /** Api Version */
+      api_version?: string | null
       /** Models */
       models?: string[]
     }

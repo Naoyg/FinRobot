@@ -23,7 +23,9 @@ function normalizeCustomProviderName(rawName: string): { id: string; label: stri
  * id (no separate id field); a single model id (no list). */
 export interface DraftProvider {
   name: string
+  kind: 'openai-compatible' | 'azure-openai'
   baseUrl: string
+  apiVersion: string
   modelId: string
   apiKey: string
 }
@@ -173,23 +175,32 @@ export function AiModelPanel({
       label: p.label,
       kind: p.kind,
       base_url: p.base_url,
+      api_version: p.api_version,
       models: p.models,
     }))
   const handleAddCustomProvider = () => {
     const { id: providerId, label } = normalizeCustomProviderName(draftProvider.name)
     const baseUrl = draftProvider.baseUrl.trim()
+    const isAzure = draftProvider.kind === 'azure-openai'
     if (!providerId || !baseUrl) {
-      addToast({ type: 'error', title: t('settings.customProvider.incompleteTitle') })
+      addToast({
+        type: 'error',
+        title: isAzure
+          ? t('settings.customProvider.incompleteAzureTitle')
+          : t('settings.customProvider.incompleteTitle'),
+      })
       return
     }
     const modelId = draftProvider.modelId.trim()
+    const apiVersion = draftProvider.apiVersion.trim() || undefined
     const next = [
       ...serializeCustomProviders(customProviders),
       {
         id: providerId,
         label,
-        kind: 'openai-compatible' as const,
+        kind: draftProvider.kind,
         base_url: baseUrl,
+        ...(isAzure && apiVersion ? { api_version: apiVersion } : {}),
         models: modelId ? [modelId] : [],
       },
     ]
@@ -212,6 +223,13 @@ export function AiModelPanel({
   const handleEditCustomBaseUrl = (id: string, value: string) => {
     const next = serializeCustomProviders(customProviders).map((p) =>
       p.id === id ? { ...p, base_url: value.trim() } : p,
+    )
+    scheduleStandardSave({ custom_providers: next })
+  }
+  // Inline-edit the api_version of the currently-selected azure-openai provider.
+  const handleEditCustomApiVersion = (id: string, value: string) => {
+    const next = serializeCustomProviders(customProviders).map((p) =>
+      p.id === id ? { ...p, api_version: value.trim() || null } : p,
     )
     scheduleStandardSave({ custom_providers: next })
   }
@@ -262,9 +280,35 @@ export function AiModelPanel({
         </div>
 
         {addingCustom ? (
-          /* Add a custom OpenAI-compatible provider */
+          /* Add a custom provider (OpenAI-compatible or Azure OpenAI) */
           <div className="settings-custom-box">
-            <p className="settings-custom-box-title">{t('settings.customProvider.title')}</p>
+            <p className="settings-custom-box-title">
+              {draftProvider.kind === 'azure-openai'
+                ? t('settings.customProvider.titleAzure')
+                : t('settings.customProvider.title')}
+            </p>
+            {/* Provider type toggle */}
+            <div className="settings-field">
+              <label className="settings-field-label">
+                <span className="label-text">{t('settings.customProvider.kind')}</span>
+              </label>
+              <div className="settings-kind-toggle">
+                <button
+                  type="button"
+                  className={`settings-kind-btn${draftProvider.kind === 'openai-compatible' ? ' is-active' : ''}`}
+                  onClick={() => setDraftProvider((d) => ({ ...d, kind: 'openai-compatible' }))}
+                >
+                  {t('settings.customProvider.kindOpenAI')}
+                </button>
+                <button
+                  type="button"
+                  className={`settings-kind-btn${draftProvider.kind === 'azure-openai' ? ' is-active' : ''}`}
+                  onClick={() => setDraftProvider((d) => ({ ...d, kind: 'azure-openai' }))}
+                >
+                  {t('settings.customProvider.kindAzure')}
+                </button>
+              </div>
+            </div>
             <div className="settings-field">
               <label className="settings-field-label">
                 <span className="label-text">{t('settings.customProvider.name')}</span>
@@ -273,13 +317,19 @@ export function AiModelPanel({
                 className="settings-input"
                 value={draftProvider.name}
                 onChange={(e) => setDraftProvider((d) => ({ ...d, name: e.target.value }))}
-                placeholder="OpenRouter"
+                placeholder={
+                  draftProvider.kind === 'azure-openai' ? 'my-azure' : 'OpenRouter'
+                }
                 autoComplete="off"
               />
             </div>
             <div className="settings-field">
               <label className="settings-field-label">
-                <span className="label-text">{t('settings.customProvider.baseUrl')}</span>
+                <span className="label-text">
+                  {draftProvider.kind === 'azure-openai'
+                    ? t('settings.customProvider.azureEndpoint')
+                    : t('settings.customProvider.baseUrl')}
+                </span>
               </label>
               <input
                 className="settings-input"
@@ -287,11 +337,32 @@ export function AiModelPanel({
                 onChange={(e) =>
                   setDraftProvider((d) => ({ ...d, baseUrl: e.target.value.trim() }))
                 }
-                placeholder="https://openrouter.ai/api/v1"
+                placeholder={
+                  draftProvider.kind === 'azure-openai'
+                    ? 'https://{resource}.openai.azure.com'
+                    : 'https://openrouter.ai/api/v1'
+                }
                 autoComplete="off"
                 spellCheck={false}
               />
             </div>
+            {draftProvider.kind === 'azure-openai' && (
+              <div className="settings-field">
+                <label className="settings-field-label">
+                  <span className="label-text">{t('settings.customProvider.apiVersion')}</span>
+                </label>
+                <input
+                  className="settings-input"
+                  value={draftProvider.apiVersion}
+                  onChange={(e) =>
+                    setDraftProvider((d) => ({ ...d, apiVersion: e.target.value.trim() }))
+                  }
+                  placeholder="2024-02-01"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </div>
+            )}
             <div className="settings-field">
               <label className="settings-field-label">
                 <span className="label-text">{t('settings.model.label')}</span>
@@ -302,7 +373,11 @@ export function AiModelPanel({
                 onChange={(e) =>
                   setDraftProvider((d) => ({ ...d, modelId: e.target.value.trim() }))
                 }
-                placeholder={t('settings.model.idPlaceholder')}
+                placeholder={
+                  draftProvider.kind === 'azure-openai'
+                    ? t('settings.customProvider.azureDeploymentPlaceholder')
+                    : t('settings.model.idPlaceholder')
+                }
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -330,7 +405,14 @@ export function AiModelPanel({
                 className="settings-btn"
                 onClick={() => {
                   setAddingCustom(false)
-                  setDraftProvider({ name: '', baseUrl: '', modelId: '', apiKey: '' })
+                  setDraftProvider({
+                    name: '',
+                    kind: 'openai-compatible',
+                    baseUrl: '',
+                    apiVersion: '',
+                    modelId: '',
+                    apiKey: '',
+                  })
                 }}
               >
                 {t('settings.customProvider.cancel')}
@@ -363,13 +445,17 @@ export function AiModelPanel({
               </datalist>
             </div>
 
-            {/* Custom provider: editable base_url + delete (the model id
-              is the shared input above). */}
+            {/* Custom provider: editable base_url / Azure endpoint + delete
+              (the model id is the shared input above). */}
             {currentIsCustom && currentProviderInfo && (
               <div className="settings-custom-box">
                 <div className="settings-field">
                   <label className="settings-field-label">
-                    <span className="label-text">{t('settings.customProvider.baseUrl')}</span>
+                    <span className="label-text">
+                      {currentProviderInfo.kind === 'azure-openai'
+                        ? t('settings.customProvider.azureEndpoint')
+                        : t('settings.customProvider.baseUrl')}
+                    </span>
                   </label>
                   <input
                     className="settings-input"
@@ -379,6 +465,25 @@ export function AiModelPanel({
                     spellCheck={false}
                   />
                 </div>
+                {currentProviderInfo.kind === 'azure-openai' && (
+                  <div className="settings-field">
+                    <label className="settings-field-label">
+                      <span className="label-text">
+                        {t('settings.customProvider.apiVersion')}
+                      </span>
+                    </label>
+                    <input
+                      className="settings-input"
+                      defaultValue={currentProviderInfo.api_version ?? ''}
+                      onBlur={(e) =>
+                        handleEditCustomApiVersion(currentProviderId, e.target.value)
+                      }
+                      placeholder="2024-02-01"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                )}
                 <button
                   type="button"
                   className="settings-delete-link"

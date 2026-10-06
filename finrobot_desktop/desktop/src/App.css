@@ -2120,6 +2120,32 @@ select.settings-input {
   background: var(--accent-dim);
 }
 
+/* Provider-type toggle (OpenAI-compatible / Azure OpenAI) */
+.settings-kind-toggle {
+  display: flex;
+  gap: var(--sp-1);
+}
+.settings-kind-btn {
+  border-radius: var(--r-md);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.settings-kind-btn:hover {
+  border-color: var(--border-glow);
+  color: var(--text-primary);
+}
+.settings-kind-btn.is-active {
+  background: var(--accent-dim);
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
 /* Inline custom-provider editor (base_url / models / add / delete) */
 .settings-custom-box {
   display: flex;

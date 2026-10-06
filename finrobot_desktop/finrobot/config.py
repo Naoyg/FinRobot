@@ -79,7 +79,7 @@ def _shared_llm_http_client() -> httpx.AsyncClient:
     return _llm_http_client
 
 
-ProviderKind = Literal["openai-compatible", "anthropic", "test"]
+ProviderKind = Literal["openai-compatible", "anthropic", "azure-openai", "test"]
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
@@ -107,9 +107,14 @@ class ProviderConfig(BaseModel):
     id: str  # referenced by model_name's "<id>:<model>" prefix, e.g. "openai"
     label: str  # human-facing name shown in the UI, e.g. "OpenAI"
     kind: ProviderKind
-    # base_url is used by openai-compatible providers. The anthropic built-in
+    # base_url is used by openai-compatible and azure-openai providers.
+    # For azure-openai this is the Azure endpoint
+    # (e.g. https://{resource}.openai.azure.com). The anthropic built-in
     # leaves it None and lets AnthropicProvider supply the canonical endpoint.
     base_url: str | None = None
+    # api_version is used exclusively by azure-openai providers
+    # (e.g. "2024-02-01").
+    api_version: str | None = None
     models: list[str] = Field(default_factory=list)
 
 
@@ -553,6 +558,22 @@ class FinRobotSettings(BaseSettings):
                 model_id,
                 provider=OpenAIProvider(
                     base_url=cfg.base_url, api_key=api_key, http_client=http_client
+                ),
+            )
+        elif cfg.kind == "azure-openai":
+            # Azure OpenAI Service. base_url holds the Azure endpoint
+            # (https://{resource}.openai.azure.com); api_version selects
+            # the REST API version. The model_id is the deployment name.
+            from pydantic_ai.models.openai import OpenAIChatModel
+            from pydantic_ai.providers.azure import AzureProvider
+
+            return OpenAIChatModel(
+                model_id,
+                provider=AzureProvider(
+                    azure_endpoint=cfg.base_url,
+                    api_version=cfg.api_version,
+                    api_key=api_key,
+                    http_client=http_client,
                 ),
             )
         elif cfg.kind == "test":

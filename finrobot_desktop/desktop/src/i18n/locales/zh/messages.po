@@ -2817,6 +2817,38 @@ msgid "settings.customProvider.incompleteTitle"
 msgstr "名称和 Base URL 为必填"
 
 #. js-lingui-explicit-id
+msgid "settings.customProvider.incompleteAzureTitle"
+msgstr "名称和 Azure 端点为必填"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.kind"
+msgstr "服务商类型"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.kindOpenAI"
+msgstr "OpenAI 兼容"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.kindAzure"
+msgstr "Azure OpenAI"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.titleAzure"
+msgstr "Azure OpenAI 服务商"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.azureEndpoint"
+msgstr "Azure 端点"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.apiVersion"
+msgstr "API 版本"
+
+#. js-lingui-explicit-id
+msgid "settings.customProvider.azureDeploymentPlaceholder"
+msgstr "部署名称"
+
+#. js-lingui-explicit-id
 msgid "settings.test.button"
 msgstr "测试连接"
 

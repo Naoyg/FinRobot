@@ -56,7 +56,8 @@ async def probe_model(
         await model_request(
             model,
             [ModelRequest(parts=[UserPromptPart(content="ping")])],
-            model_settings={"max_tokens": 8},
+            # 16 = OpenAI Responses API minimum for max_output_tokens (azure-openai).
+            model_settings={"max_tokens": 16},
         )
     except (asyncio.CancelledError, KeyboardInterrupt, SystemExit):
         raise  # never swallow control-flow / shutdown signals (red-line N2)

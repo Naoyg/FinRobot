@@ -564,10 +564,13 @@ class FinRobotSettings(BaseSettings):
             # Azure OpenAI Service. base_url holds the Azure endpoint
             # (https://{resource}.openai.azure.com); api_version selects
             # the REST API version. The model_id is the deployment name.
-            from pydantic_ai.models.openai import OpenAIChatModel
+            # Uses the Responses API (/v1/responses), not Chat Completions:
+            # newer reasoning deployments (e.g. gpt-6-luna) reject function
+            # tools combined with reasoning on /v1/chat/completions.
+            from pydantic_ai.models.openai import OpenAIResponsesModel
             from pydantic_ai.providers.azure import AzureProvider
 
-            return OpenAIChatModel(
+            return OpenAIResponsesModel(
                 model_id,
                 provider=AzureProvider(
                     azure_endpoint=cfg.base_url,
